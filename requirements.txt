@@ -1,0 +1,31 @@
+# Get the latest cutting edge stuff direct from the github.
+
+gradio  @   git+https://github.com/gradio-app/gradio
+rich    @   git+https://github.com/Textualize/rich
+
+huggingface-hub @   git+https://github.com/huggingface/huggingface_hub
+transformers    @ git+https://github.com/huggingface/transformers
+
+torch 
+torchaudio
+torchvision 
+
+numpy
+tokenizers
+
+certifi==2024.2.2
+charset-normalizer==3.3.2
+filelock==3.13.1
+fsspec==2024.2.0
+idna==3.6
+numpy==1.26.4
+packaging==23.2
+PyYAML==6.0.1
+regex==2023.12.25
+requests==2.31.0
+safetensors==0.4.2
+tqdm==4.66.2
+typing_extensions==4.9.0
+urllib3==2.2.0
+
+
