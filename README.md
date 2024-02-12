@@ -1,6 +1,7 @@
 # Prerequisites
 
 This project doesn't really know how to do things without CUDA (I think).
+It uses the highest level APIs I could find to do the things.
 
 1. Dependencies:
 ```script
@@ -19,4 +20,3 @@ Run one of the scripts in the repo:
     microphone_interface.py    A toy web page that uses numpy to reverse a recording from the microphone.
 
 
-    do_nothing.py   Does literally nothing.
