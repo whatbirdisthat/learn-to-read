@@ -37,6 +37,7 @@ conda run -n learn-to-read --live-stream python app.py
 
 _Some extra information._
 
+| | |
 | --- | --- |
 | app.py |  Will display an app that does "real-time" transcription of input from the microphone, and|
 |       |  compare it with the text of the "flash card" phrase.|
