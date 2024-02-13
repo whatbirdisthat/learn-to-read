@@ -1,6 +1,6 @@
 # Get the latest cutting edge stuff direct from the github.
 
-gradio  @   git+https://github.com/gradio-app/gradio
+gradio
 rich    @   git+https://github.com/Textualize/rich
 
 huggingface-hub @   git+https://github.com/huggingface/huggingface_hub
