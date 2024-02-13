@@ -1,5 +1,3 @@
-# Get the latest cutting edge stuff direct from the github.
-
 gradio
 rich    @   git+https://github.com/Textualize/rich
 
@@ -27,5 +25,3 @@ safetensors==0.4.2
 tqdm==4.66.2
 typing_extensions==4.9.0
 urllib3==2.2.0
-
-
