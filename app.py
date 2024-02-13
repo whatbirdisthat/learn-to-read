@@ -1,12 +1,14 @@
 from functools import cached_property
 
 import gradio as gr
+import numpy as np
 import yaml
 from transformers import pipeline
 import time
 from rich import print
 
 pipe = pipeline("automatic-speech-recognition", model='openai/whisper-medium.en', device=0)
+text2speech = pipeline("text-to-speech", model="suno/bark-small", device=0, model_kwargs={"pad_token_id": 10000})
 
 
 class UI_Styles:
@@ -18,6 +20,16 @@ class UI_Styles:
 
     def __str__(self):
         return UI_Styles.app_styles
+
+
+def say(words):
+    this_audio = text2speech(words)
+    # synthesised_speech = (this_audio['audio'].numpy() * 32767).astype(np.int16)
+    # synthesised_speech = (this_audio['audio'] * 32767).astype(np.int16)
+    synthesised_speech = this_audio['audio'].T
+    sample_rate = this_audio['sampling_rate']
+    return sample_rate, synthesised_speech
+    # return this_audio['sampling_rate'], this_audio['audio']
 
 
 def transcribe(audio, state="", speakword=""):
@@ -98,6 +110,15 @@ with gr.Blocks(css=UI_Styles().app_styles) as demo:
             audio = gr.Audio(sources=["microphone"], type="filepath", streaming=True)
         with gr.Column():
             textbox = gr.Textbox()
+
+    with gr.Row():
+        with gr.Column():
+            audio_player = gr.Audio(type="numpy")
+            # audio_player = gr.Audio(sources=[synthesised_speech], type="numpy", sample_rate=sample_rate)
+        with gr.Column():
+            some_words = gr.Markdown("# These are some words!")
+            say_button = gr.Button("Say the word")
+            say_button.click(say, inputs=[the_word], outputs=[audio_player])
 
     audio.stream(fn=transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word])
 
