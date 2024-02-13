@@ -1,5 +1,6 @@
 gradio
 rich    @   git+https://github.com/Textualize/rich
+argparse
 
 huggingface-hub @   git+https://github.com/huggingface/huggingface_hub
 transformers    @ git+https://github.com/huggingface/transformers

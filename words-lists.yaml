@@ -1,5 +1,6 @@
 list: advanced
 simple:
+    - Lucas Arthur Walters
     - quick
     - brown
     - fox
@@ -8,10 +9,11 @@ simple:
     - lazy
     - dog
 advanced:
+  - Lucas
   - builder
-  - house
+  - parliament house
   - elevator
-  - stretch
+  - a nice long stretch
   - compost
   - marine biologist
   - super mario brothers
