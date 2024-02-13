@@ -1,7 +1,7 @@
 from functools import cached_property
 
 import gradio as gr
-import numpy as np
+
 import yaml
 from transformers import pipeline
 import time
@@ -24,12 +24,9 @@ class UI_Styles:
 
 def say(words):
     this_audio = text2speech(words)
-    # synthesised_speech = (this_audio['audio'].numpy() * 32767).astype(np.int16)
-    # synthesised_speech = (this_audio['audio'] * 32767).astype(np.int16)
-    synthesised_speech = this_audio['audio'].T
+    transposed_audio = this_audio['audio'].T
     sample_rate = this_audio['sampling_rate']
-    return sample_rate, synthesised_speech
-    # return this_audio['sampling_rate'], this_audio['audio']
+    return sample_rate, transposed_audio
 
 
 def transcribe(audio, state="", speakword=""):
@@ -113,7 +110,7 @@ with gr.Blocks(css=UI_Styles().app_styles) as demo:
 
     with gr.Row():
         with gr.Column():
-            audio_player = gr.Audio(type="numpy")
+            audio_player = gr.Audio(type="numpy", autoplay=True)
             # audio_player = gr.Audio(sources=[synthesised_speech], type="numpy", sample_rate=sample_rate)
         with gr.Column():
             some_words = gr.Markdown("# These are some words!")
