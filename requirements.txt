@@ -9,6 +9,9 @@ torch
 torchaudio
 torchvision 
 
+#openai-whisper  @   git+https://github.com/openai/whisper.git
+openai-whisper
+
 numpy
 tokenizers
 

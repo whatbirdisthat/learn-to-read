@@ -2,5 +2,5 @@ models:
   speech2text:  openai/whisper-medium.en
   text2speech:  suno/bark-small
 lists:
-  words-lists:  words-lists.yaml
+  phrase-lists:  phrase-lists.yaml
   skip-list:  skip-list.txt

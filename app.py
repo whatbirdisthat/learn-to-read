@@ -3,60 +3,53 @@ from functools import cached_property
 import gradio as gr
 
 import yaml
-from transformers import pipeline
 import time
 from rich import print
 
 import argparse
 
+from UI.styling import UI_Styles
+
+# from speech_to_text.asr_pipeline import asr
+from speech_to_text.asr_openai_whisper import asr
+# from text_to_speech.tts_bark import say
+from text_to_speech.tts_bark_voices import say
+
+# from speech_to_text.asr_fake import asr
+# from text_to_speech.tts_fake import say
+
+from word_processing.phrase import RandomPhrase
+from word_processing.wisdom import RandomWisdom
+
 my_args = argparse.ArgumentParser(description="Read the arguments from the command line")
 my_args.add_argument("--settings", help="The settings file", default="settings.yaml")
 args = my_args.parse_args()
+
 app_settings = yaml.safe_load(open(args.settings, "r"))
 print(f"APP_SETTINGS: {app_settings}")
 
-app_settings['models']['speech2text'] = 'openai/whisper-medium.en'  # "facebook/wav2vec2-base-960h"
-app_settings['models']['text2speech'] = 'suno/bark-small'
-app_settings['words_lists'] = 'words-lists.yaml'
 
-pipe = pipeline("automatic-speech-recognition", model=app_settings['models']['speech2text'], device=0)
-text2speech = pipeline("text-to-speech", model="suno/bark-small", device=0, model_kwargs={"pad_token_id": 10000})
+# app_settings['models']['text2speech'] = 'suno/bark-small'
+# app_settings['words_lists'] = 'words-lists.yaml'
 
-
-# pipe = pipeline("automatic-speech-recognition", model='openai/whisper-medium.en', device=0)
-# text2speech = pipeline("text-to-speech", model="suno/bark-small", device=0, model_kwargs={"pad_token_id": 10000})
 # the app will dream up a list of random words
 # sentence_pieces = pipeline("fill-mask", model="bert-base-uncased", device=0)
-
-
-class UI_Styles:
-    @cached_property
-    def app_styles(self):
-        return '''
-        #label_the_word { font-size: xx-large; color: gold; font-family: "Monospace" ; text-align: center; }
-        '''
-
-    def __str__(self):
-        return UI_Styles.app_styles
-
-
-def say(words):
-    this_audio = text2speech(words)
-    transposed_audio = this_audio['audio'].T
-    sample_rate = this_audio['sampling_rate']
-    return sample_rate, transposed_audio
 
 
 def transcribe(audio, state="", speakword=""):
     print(audio)
     time.sleep(2)
-    text = pipe(audio)["text"].lower().strip()
+    # text = asr(audio)["text"].lower().strip()
+    asr_text = asr(audio)
 
-    print(f"[blue]Transcribing:[/][green]'{text}'[/]")
+    print(f"[b]Transcribing:[/][green]'{asr_text}'[/]")
 
-    from word_processing.syllable import generate_syllables
-    phrase_syllables = generate_syllables(text)
-    print(f"[blue]SYLLABLES:[/][green]{phrase_syllables}[/]")
+    from word_processing.syllable import generate_syllables_plain, generate_syllables_console
+
+    phrase_syllables = generate_syllables_console(asr_text)
+    print(f"[b]SYLLABLES:[/][green]{phrase_syllables}[/]")
+    label_syllables = f'{generate_syllables_plain(speakword)}'
+    # html_syllables = generate_syllables_html(text)
 
     #    with open("skip-list.txt") as skip_list:
     with open(app_settings['lists']['skip-list']) as skip_list:
@@ -64,58 +57,36 @@ def transcribe(audio, state="", speakword=""):
 
     # print("[orange]Hallucination Words:[/]")
     # print(hallucination_words)
+    print(f"""[b]CHECKING: [/][blue]'{speakword}'[/] in [green]'{asr_text}'[/]""")
 
-    if text == "" or text in hallucination_words:
-        print(f"[red i]'{text}' is a hallucination[/]")
+    if asr_text == "" or asr_text in hallucination_words:
+        print(f"[red i]'{asr_text}' is a hallucination[/]")
     else:
-        state += "\n" + text + " "
-        if speakword in text:
+        state += "\n" + asr_text + " "
+        if speakword.lower() in asr_text:
             state += f"'{speakword}' is ✅ Correct! Well done.\n"
-            speakword = f'{RandomWord()}'.lower()
+            speakword = f'{RandomPhrase(app_settings["lists"]["phrase-lists"])}'.lower()
+            label_syllables = f'{generate_syllables_plain(speakword)}'
         else:
             print(f"{speakword} ❌ Incorrect.")
             state += f"{speakword} ❌ Incorrect. Try again.\n"
 
-    return state, state, speakword
+    return state, state, speakword, label_syllables
 
 
-class RandomWisdom:
-    wise_sayings = [
-        "📚📚📚 Learn to 🧑‍🔬 READ 📚📚📚",
-        "Your 🧠 is a muscle. 💪 The more you use it, the stronger it gets. 🏋️‍♂️",
-        "📖 Reading is a great way to exercise your brain. 🧠",
-        "📖 Reading 📖  It helps you learn new things and understand the world around you. 🌍",
-    ]
-
-    def __init__(self):
-        import random
-        self.wisdom = self.wise_sayings[random.randint(0, len(self.wise_sayings) - 1)]
-
-    def __str__(self):
-        return self.wisdom
-
-
-class RandomWord:
-    @property
-    def mywords(self):
-        #        with open("words-lists.yaml", "r") as wl_file:
-
-        with open(app_settings['lists']['words-lists'], "r") as wl_file:
-            words_lists = yaml.safe_load(wl_file)
-        which_list = words_lists['list']
-        import json
-        # print(f'WORDS_LISTS: {json.dumps(words_lists, indent=4)}')
-        return words_lists[which_list]
-
-    def __init__(self):
-        import random
-        from word_processing.syllable import generate_syllables
-        self.word = self.mywords[random.randint(0, len(self.mywords) - 1)]
-        phrase_syllables = generate_syllables(self.word)
-        print(f"SYLLABLES: {phrase_syllables}")
-
-    def __str__(self):
-        return self.word
+# IS_RECORDING = False
+#
+#
+# def recording_stopped(audio, state="", speakword=""):
+#     IS_RECORDING = False
+#     print(f"Recording stopped: {audio}")
+#     return audio, state, speakword
+#
+#
+# def recording_started(audio, state="", speakword=""):
+#     IS_RECORDING = True
+#     print(f"Recording started: {audio}")
+#     return audio, state, speakword
 
 
 with gr.Blocks(css=UI_Styles().app_styles) as demo:
@@ -130,17 +101,19 @@ with gr.Blocks(css=UI_Styles().app_styles) as demo:
             wise_button.click(say, inputs=[todays_wisdom], outputs=[wise_audio_player])
 
     with gr.Row():
-        from word_processing.syllable import generate_syllables
+        with gr.Column():
+            from word_processing.syllable import generate_syllables_html, generate_syllables_plain
 
-        the_random_word = RandomWord()
-        the_word = gr.Label(f"{the_random_word}", elem_id='label_the_word')
-        # the_syllables = gr.Label(lambda r: f"# {generate_syllables(f'{r}')}", inputs=[the_word])
-
-        # words_list = gr.Code("\n".join([w.rstrip() for w in the_random_word.mywords]))
+            the_random_word = RandomPhrase(app_settings["lists"]["phrase-lists"])
+            the_word = gr.Label(f"{the_random_word}", elem_id='label_the_word')
+            the_syllables = gr.Label(generate_syllables_plain(f"{the_random_word}"))
+        with gr.Column():
+            words_list = gr.Code("\n".join([w.rstrip() for w in the_random_word.mywords]))
 
     with gr.Row():
         with gr.Column():
-            audio = gr.Audio(sources=["microphone"], type="filepath", streaming=True)
+            # audio = gr.Audio(sources=["microphone"], type="filepath", streaming=True)
+            audio = gr.Audio(sources=["microphone"], type="filepath", streaming=False)
         with gr.Column():
             textbox = gr.Textbox()
 
@@ -153,7 +126,12 @@ with gr.Blocks(css=UI_Styles().app_styles) as demo:
             say_button = gr.Button("Say the word")
             say_button.click(say, inputs=[the_word], outputs=[audio_player])
 
-    audio.stream(fn=transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word])
+    # audio.stream(fn=transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word, the_syllables])
+
+    # audio.start_recording(fn=recording_started)
+    # audio.stop_recording(fn=recording_stopped)
+    audio.stop_recording(fn=transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word, the_syllables])
+
     # audio.stop(transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word])
 
 demo.launch(debug=True)
