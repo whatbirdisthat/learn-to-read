@@ -16,7 +16,7 @@ class BarkPipelineClient:
                 model_kwargs={"pad_token_id": 10000})
         return text2speech
 
-    def say(self, words, voice_preset="v2/en_speaker_0"):
+    def say(self, words):
         this_audio = self.pipeline(words)
         transposed_audio = this_audio['audio'].T
         sample_rate = this_audio['sampling_rate']

@@ -11,7 +11,8 @@ import argparse
 from UI.styling import UI_Styles
 
 from speech_to_text.asr_openai_whisper import asr
-from text_to_speech.tts_t5_pipeline import say
+# from text_to_speech.tts_t5_pipeline import say
+from text_to_speech.tts_xtts import say
 
 from word_processing.phrase import RandomPhrase
 from word_processing.wisdom import RandomWisdom
@@ -99,7 +100,7 @@ with gr.Blocks(css=UI_Styles().app_styles) as demo:
     with gr.Row():
         with gr.Column():
             # audio = gr.Audio(sources=["microphone"], type="filepath", streaming=True)
-            audio = gr.Audio(sources=["microphone"], type="filepath", streaming=False)
+            learner_audio = gr.Audio(sources=["microphone"], type="filepath", streaming=False)
         with gr.Column():
             message_text = gr.Label()
 
@@ -109,14 +110,14 @@ with gr.Blocks(css=UI_Styles().app_styles) as demo:
         with gr.Column():
             some_words = gr.Markdown("# These are some words!")
             say_button = gr.Button("Say the word")
-            say_button.click(say, inputs=[the_word], outputs=[audio_player])
+            say_button.click(say, inputs=[the_word, learner_audio], outputs=[audio_player])
 
     with gr.Row():
         with gr.Column():
             words_list = gr.Markdown(print_words_list(the_random_word))
 
     # audio.stream(fn=transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word, the_syllables])
-    audio.stop_recording(fn=transcribe, inputs=[audio, state, the_word, words_list],
+    learner_audio.stop_recording(fn=transcribe, inputs=[learner_audio, state, the_word, words_list],
                          outputs=[state, message_text, the_word, the_syllables, words_list])
 
 demo.launch(debug=True)

@@ -12,6 +12,8 @@ torchvision
 #openai-whisper  @   git+https://github.com/openai/whisper.git
 openai-whisper
 
+TTS
+
 numpy
 tokenizers
 sentencepiece
