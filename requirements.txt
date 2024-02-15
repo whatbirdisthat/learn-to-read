@@ -14,11 +14,12 @@ openai-whisper
 
 numpy
 tokenizers
+sentencepiece
+#datasets[audio]
 
 certifi==2024.2.2
 charset-normalizer==3.3.2
 filelock==3.13.1
-fsspec==2024.2.0
 idna==3.6
 numpy==1.26.4
 packaging==23.2
@@ -27,5 +28,7 @@ regex==2023.12.25
 requests==2.31.0
 safetensors==0.4.2
 tqdm==4.66.2
-typing_extensions==4.9.0
 urllib3==2.2.0
+
+typing_extensions==4.9.0
+fsspec==2023.9.2

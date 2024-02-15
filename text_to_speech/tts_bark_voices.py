@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from transformers import AutoProcessor, BarkModel
 
 # device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -44,7 +45,20 @@ class BarkClient:
             semantic_max_new_tokens=len(words) * 24
         )
 
+        def convert_to_int16(data):
+            if data.dtype == np.float32:
+                data = data / np.abs(data).max()
+                data = data * 32767
+                data = data.astype(np.int16)
+            else:
+                print(f"Data type: {data.dtype}")
+            return data
+
+        # audio_array = audio_array.cpu().numpy().squeeze()
         audio_array = audio_array.cpu().numpy().squeeze()
+        audio_array = convert_to_int16(audio_array)
+
+        # audio_array = audio_array.cpu().numpy().squeeze()
         sample_rate = tts_model.generation_config.sample_rate
         return sample_rate, audio_array
 

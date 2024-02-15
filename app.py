@@ -10,13 +10,8 @@ import argparse
 
 from UI.styling import UI_Styles
 
-# from speech_to_text.asr_pipeline import asr
 from speech_to_text.asr_openai_whisper import asr
-# from text_to_speech.tts_bark import say
-from text_to_speech.tts_bark_voices import say
-
-# from speech_to_text.asr_fake import asr
-# from text_to_speech.tts_fake import say
+from text_to_speech.tts_t5_pipeline import say
 
 from word_processing.phrase import RandomPhrase
 from word_processing.wisdom import RandomWisdom
@@ -28,19 +23,15 @@ args = my_args.parse_args()
 app_settings = yaml.safe_load(open(args.settings, "r"))
 print(f"APP_SETTINGS: {app_settings}")
 
-
-# app_settings['models']['text2speech'] = 'suno/bark-small'
-# app_settings['words_lists'] = 'words-lists.yaml'
-
 # the app will dream up a list of random words
 # sentence_pieces = pipeline("fill-mask", model="bert-base-uncased", device=0)
 
 
-def transcribe(audio, state="", speakword=""):
-    print(audio)
+def transcribe(audio_filename, app_state, speakword, wordlist_control):
+    print(audio_filename)
     time.sleep(2)
-    # text = asr(audio)["text"].lower().strip()
-    asr_text = asr(audio)
+    # text = asr(audio_filename)["text"].lower().strip()
+    asr_text = asr(audio_filename)
 
     print(f"[b]Transcribing:[/][green]'{asr_text}'[/]")
 
@@ -49,44 +40,40 @@ def transcribe(audio, state="", speakword=""):
     phrase_syllables = generate_syllables_console(asr_text)
     print(f"[b]SYLLABLES:[/][green]{phrase_syllables}[/]")
     label_syllables = f'{generate_syllables_plain(speakword)}'
-    # html_syllables = generate_syllables_html(text)
 
-    #    with open("skip-list.txt") as skip_list:
     with open(app_settings['lists']['skip-list']) as skip_list:
         hallucination_words = [each_line.rstrip() for each_line in skip_list.readlines()]
 
     # print("[orange]Hallucination Words:[/]")
     # print(hallucination_words)
     print(f"""[b]CHECKING: [/][blue]'{speakword}'[/] in [green]'{asr_text}'[/]""")
-
+    message = "Try again... ❌"
     if asr_text == "" or asr_text in hallucination_words:
         print(f"[red i]'{asr_text}' is a hallucination[/]")
     else:
-        state += "\n" + asr_text + " "
+        app_state += "\n" + asr_text + " "
         if speakword.lower() in asr_text:
-            state += f"'{speakword}' is ✅ Correct! Well done.\n"
-            speakword = f'{RandomPhrase(app_settings["lists"]["phrase-lists"])}'.lower()
+            message = f"'{asr_text}' is ✅ Correct! Well done.\n"
+            randomword = RandomPhrase(app_settings["lists"]["phrase-lists"])
+            speakword = f'{randomword}'.lower()
             label_syllables = f'{generate_syllables_plain(speakword)}'
+            wordlist_control = print_words_list(randomword)
         else:
             print(f"{speakword} ❌ Incorrect.")
-            state += f"{speakword} ❌ Incorrect. Try again.\n"
+            message = f"{asr_text} ❌ Incorrect. Try again: '{speakword}'\n"
 
-    return state, state, speakword, label_syllables
+    return app_state, message, speakword, label_syllables, wordlist_control
 
 
-# IS_RECORDING = False
-#
-#
-# def recording_stopped(audio, state="", speakword=""):
-#     IS_RECORDING = False
-#     print(f"Recording stopped: {audio}")
-#     return audio, state, speakword
-#
-#
-# def recording_started(audio, state="", speakword=""):
-#     IS_RECORDING = True
-#     print(f"Recording started: {audio}")
-#     return audio, state, speakword
+def print_words_list(the_random_word):
+    def is_now_word(a_word):
+        a_word = a_word.rstrip()
+        if a_word == the_random_word.word:
+            return f"✅ {a_word}"
+        else:
+            return a_word
+
+    return "\n* ".join([is_now_word(w) for w in the_random_word.mywords])
 
 
 with gr.Blocks(css=UI_Styles().app_styles) as demo:
@@ -106,32 +93,30 @@ with gr.Blocks(css=UI_Styles().app_styles) as demo:
 
             the_random_word = RandomPhrase(app_settings["lists"]["phrase-lists"])
             the_word = gr.Label(f"{the_random_word}", elem_id='label_the_word')
-            the_syllables = gr.Label(generate_syllables_plain(f"{the_random_word}"))
         with gr.Column():
-            words_list = gr.Code("\n".join([w.rstrip() for w in the_random_word.mywords]))
+            the_syllables = gr.Label(generate_syllables_plain(f"{the_random_word}"))
 
     with gr.Row():
         with gr.Column():
             # audio = gr.Audio(sources=["microphone"], type="filepath", streaming=True)
             audio = gr.Audio(sources=["microphone"], type="filepath", streaming=False)
         with gr.Column():
-            textbox = gr.Textbox()
+            message_text = gr.Label()
 
     with gr.Row():
         with gr.Column():
             audio_player = gr.Audio(type="numpy", autoplay=True)
-            # audio_player = gr.Audio(sources=[synthesised_speech], type="numpy", sample_rate=sample_rate)
         with gr.Column():
             some_words = gr.Markdown("# These are some words!")
             say_button = gr.Button("Say the word")
             say_button.click(say, inputs=[the_word], outputs=[audio_player])
 
+    with gr.Row():
+        with gr.Column():
+            words_list = gr.Markdown(print_words_list(the_random_word))
+
     # audio.stream(fn=transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word, the_syllables])
-
-    # audio.start_recording(fn=recording_started)
-    # audio.stop_recording(fn=recording_stopped)
-    audio.stop_recording(fn=transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word, the_syllables])
-
-    # audio.stop(transcribe, inputs=[audio, state, the_word], outputs=[textbox, state, the_word])
+    audio.stop_recording(fn=transcribe, inputs=[audio, state, the_word, words_list],
+                         outputs=[state, message_text, the_word, the_syllables, words_list])
 
 demo.launch(debug=True)

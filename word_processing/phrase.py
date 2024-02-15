@@ -1,3 +1,6 @@
+from rich import print
+
+
 class RandomPhrase:
     @property
     def mywords(self):
@@ -17,7 +20,7 @@ class RandomPhrase:
         from word_processing.syllable import generate_syllables_console
         self.word = self.mywords[random.randint(0, len(self.mywords) - 1)]
         phrase_syllables = generate_syllables_console(self.word)
-        print(f"[b]SYLLABLES: {phrase_syllables}[/]")
+        print(f"[cyan b]SYLLABLES: {' '.join([f'{p}' for p in phrase_syllables])}[/]")
 
     def __str__(self):
         return self.word

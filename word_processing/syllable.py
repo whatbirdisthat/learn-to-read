@@ -7,11 +7,11 @@ from nltk import word_tokenize
 def generate_syllables_console(phrase: str, mode: str = 'Console'):
     # syllables = nltk.SyllableTokenizer().tokenize(word)
     # return syllables
-    the_colours = 'green orange white purple red'.split()
+    the_colours = 'green orange white purple red green orange white purple red green orange white purple red'.split()
     the_phrase = word_tokenize(phrase)
     SSP = SyllableTokenizer()
     the_syllables = [s for s in [SSP.tokenize(token) for token in the_phrase]]
-    colourised_syllables = [f"[{the_colours[len(the_colours) % (i + 1)]}]{syllable}[/]" for i, syllable in
+    colourised_syllables = [f"[{the_colours[len(the_colours) % 2]}]{syllable}[/]" for i, syllable in
                             enumerate(the_syllables)]
     return colourised_syllables
 
