@@ -33,9 +33,8 @@ class WhisperClient:
         _, probs = asr_model.detect_language(mel)
         options = whisper.DecodingOptions(fp16=False)
         result = whisper.decode(asr_model, mel, options)
-        clean_result = result.text
-        # clean_result = clean_text(result.text)
-        return clean_result
+        result_text = result.text
+        return result_text
 
     def en(self, audio):
         asr_model = self.model
