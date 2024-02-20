@@ -13,13 +13,16 @@ class TTSClient:
     def __init__(self):
         self.cache_wav = "_ttsclient_cache.wav"
         self.output_wav = "_ttsclient_output.wav"
+        self.default_voice = "voicewav/richard-burton.wav"
+        self.voice_files_cache = [self.default_voice]
         # self.tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=True)
 
     @property
     def tts(self):
         global tt
         if tt is None:
-            tt = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=torch.cuda.is_available())
+            tt = TTS("tts_models/multilingual/multi-dataset/xtts_v2") #, gpu=torch.cuda.is_available())
+            tt.to("cuda" if torch.cuda.is_available() else "cpu")
         return tt
 
     def update_voice_cache(self, more_audio):
@@ -44,9 +47,10 @@ class TTSClient:
         #     cache = new_audio
         #     print(f"Cache is {cache.size / sample_rate} seconds long.")
 
-    voice_files_cache = []
-
     def say(self, words, voicefile_path) -> tuple[int, np.ndarray]:
+        if voicefile_path is None or not os.path.exists(voicefile_path):
+            print(f"[red]Voice file {voicefile_path} does not exist.[/]")
+            voicefile_path = self.default_voice
         if voicefile_path not in self.voice_files_cache:
             self.voice_files_cache.append(voicefile_path)
             self.update_voice_cache(voicefile_path)

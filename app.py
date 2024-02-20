@@ -13,6 +13,7 @@ from UI.styling import UI_Styles
 from speech_to_text.asr_openai_whisper import asr
 # from text_to_speech.tts_t5_pipeline import say
 from text_to_speech.tts_xtts import say
+from word_processing.cleaning import clean_text
 
 from word_processing.phrase import RandomPhrase
 from word_processing.wisdom import RandomWisdom
@@ -32,7 +33,8 @@ def transcribe(audio_filename, app_state, speakword, wordlist_control):
     print(audio_filename)
     time.sleep(2)
     # text = asr(audio_filename)["text"].lower().strip()
-    asr_text = asr(audio_filename)
+    raw_asr = asr(audio_filename)
+    asr_text = clean_text(raw_asr)
 
     print(f"[b]Transcribing:[/][green]'{asr_text}'[/]")
 
